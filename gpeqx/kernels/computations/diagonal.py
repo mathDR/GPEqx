@@ -1,32 +1,15 @@
-# Copyright 2022 The JaxGaussianProcesses Contributors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+# 
 
 import beartype.typing as tp
-from cola.annotations import PSD
-from cola.ops.operators import (
-    Diagonal,
-    LinearOperator,
-)
 from jax import vmap
+import jax.numpy as jnp
 from jaxtyping import Float
 
-import gpjax  # noqa: F401
-from gpjax.kernels.computations import AbstractKernelComputation
-from gpjax.typing import Array
+import gpepx  # noqa: F401
+from gpepx.kernels.computations import AbstractKernelComputation
+from gpepx.typing import Array
 
-Kernel = tp.TypeVar("Kernel", bound="gpjax.kernels.base.AbstractKernel")  # noqa: F821
+Kernel = tp.TypeVar("Kernel", bound="gpepx.kernels.base.AbstractKernel")  # noqa: F821
 
 
 class DiagonalKernelComputation(AbstractKernelComputation):
@@ -34,8 +17,8 @@ class DiagonalKernelComputation(AbstractKernelComputation):
     a diagonal Gram matrix.
     """
 
-    def gram(self, kernel: Kernel, x: Float[Array, "N D"]) -> LinearOperator:
-        return PSD(Diagonal(diag=vmap(lambda x: kernel(x, x))(x)))
+    def gram(self, kernel: Kernel, x: Float[Array, "N D"]) -> Float[Array, "N N"]:
+        return jnp.diag(vmap(lambda x: kernel(x, x))(x))
 
     def _cross_covariance(
         self, kernel: Kernel, x: Float[Array, "N D"], y: Float[Array, "M D"]

@@ -1,45 +1,32 @@
-# Copyright 2022 The JaxGaussianProcesses Contributors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+# 
 
 import abc
+import equinox as eqx
 import functools as ft
 
 import beartype.typing as tp
-from cola.ops.operator_base import LinearOperator
-from flax import nnx
+
 import jax.numpy as jnp
 from jaxtyping import (
     Float,
     Num,
 )
 
-from gpjax.kernels.computations import (
+from gpepx.kernels.computations import (
     AbstractKernelComputation,
     DenseKernelComputation,
 )
-from gpjax.parameters import (
+from gpepx.parameters import (
     Parameter,
     Real,
 )
-from gpjax.typing import (
+from gpepx.typing import (
     Array,
     ScalarFloat,
 )
 
 
-class AbstractKernel(nnx.Module):
+class AbstractKernel(eqx.Module):
     r"""Base kernel class.
 
     This class is the base class for all kernels in GPJax. It provides the basic
@@ -112,7 +99,7 @@ class AbstractKernel(nnx.Module):
         """
         return self.compute_engine.cross_covariance(self, x, y)
 
-    def gram(self, x: Num[Array, "N D"]) -> LinearOperator:
+    def gram(self, x: Num[Array, "N D"]) -> Float[Array, "N N"]:
         r"""Compute the gram matrix of the kernel.
 
         Args:

@@ -1,36 +1,19 @@
-# Copyright 2022 The JaxGaussianProcesses Contributors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+# 
 
 import abc
 import typing as tp
 
-from cola.annotations import PSD
-from cola.ops.operators import (
-    Dense,
-    Diagonal,
-)
 from jax import vmap
+import jax.numpy as jnp
 from jaxtyping import (
     Float,
     Num,
 )
 
-import gpjax
-from gpjax.typing import Array
+import gpepx
+from gpepx.typing import Array
 
-K = tp.TypeVar("K", bound="gpjax.kernels.base.AbstractKernel")  # noqa: F821
+K = tp.TypeVar("K", bound="gpepx.kernels.base.AbstractKernel")  # noqa: F821
 
 
 class AbstractKernelComputation:
@@ -57,7 +40,7 @@ class AbstractKernelComputation:
         self,
         kernel: K,
         x: Num[Array, "N D"],
-    ) -> Dense:
+    ) -> Float[Array, "N N"]:
         r"""For a given kernel, compute Gram covariance operator of the kernel function
         on an input matrix of shape `(N, D)`.
 
@@ -66,10 +49,9 @@ class AbstractKernelComputation:
             x: the inputs to the kernel function of shape `(N, D)`.
 
         Returns:
-            The Gram covariance of the kernel function as a linear operator.
+            The Gram covariance of the kernel function.
         """
-        Kxx = self.cross_covariance(kernel, x, x)
-        return PSD(Dense(Kxx))
+        return self.cross_covariance(kernel, x, x)
 
     @abc.abstractmethod
     def _cross_covariance(
@@ -92,10 +74,10 @@ class AbstractKernelComputation:
         """
         return self._cross_covariance(kernel, x, y)
 
-    def _diagonal(self, kernel: K, inputs: Num[Array, "N D"]) -> Diagonal:
-        return PSD(Diagonal(diag=vmap(lambda x: kernel(x, x))(inputs)))
+    def _diagonal(self, kernel: K, inputs: Num[Array, "N D"]) -> Float[Array, " N"]:
+        return jnp.diag(vmap(lambda x: kernel(x, x))(inputs))
 
-    def diagonal(self, kernel: K, inputs: Num[Array, "N D"]) -> Diagonal:
+    def diagonal(self, kernel: K, inputs: Num[Array, "N D"]) -> Float[Array, " N"]:
         r"""For a given kernel, compute the elementwise diagonal of the
         NxN gram matrix on an input matrix of shape `(N, D)`.
 

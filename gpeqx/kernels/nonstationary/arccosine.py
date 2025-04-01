@@ -1,30 +1,17 @@
-# Copyright 2022 The JaxGaussianProcesses Contributors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+# 
 
 import beartype.typing as tp
-from flax import nnx
+import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import Float
 
-from gpjax.kernels.base import AbstractKernel
-from gpjax.kernels.computations import (
+from gpepx.kernels.base import AbstractKernel
+from gpepx.kernels.computations import (
     AbstractKernelComputation,
     DenseKernelComputation,
 )
-from gpjax.parameters import PositiveReal
-from gpjax.typing import (
+from gpepx.parameters import PositiveReal
+from gpepx.typing import (
     Array,
     ScalarArray,
     ScalarFloat,
@@ -43,18 +30,18 @@ class ArcCosine(AbstractKernel):
     additional details.
     """
 
-    variance: nnx.Variable[ScalarArray]
-    weight_variance: nnx.Variable[WeightVariance]
-    bias_variance: nnx.Variable[ScalarArray]
+    variance: ScalarArray
+    weight_variance: WeightVariance
+    bias_variance: ScalarArray
     name = "ArcCosine"
 
     def __init__(
         self,
         active_dims: tp.Union[list[int], slice, None] = None,
         order: tp.Literal[0, 1, 2] = 0,
-        variance: tp.Union[ScalarFloat, nnx.Variable[ScalarArray]] = 1.0,
+        variance: tp.Union[ScalarFloat, ScalarArray] = 1.0,
         weight_variance: tp.Union[
-            WeightVarianceCompatible, nnx.Variable[WeightVariance]
+            WeightVarianceCompatible, WeightVariance
         ] = 1.0,
         bias_variance: tp.Union[ScalarFloat, nnx.Variable[ScalarArray]] = 1.0,
         n_dims: tp.Union[int, None] = None,
@@ -78,34 +65,10 @@ class ArcCosine(AbstractKernel):
             raise ValueError("ArcCosine kernel only implemented for orders 0, 1 and 2.")
 
         self.order = order
-
-        if isinstance(weight_variance, nnx.Variable):
-            self.weight_variance = weight_variance
-        else:
-            self.weight_variance = PositiveReal(weight_variance)
-            if tp.TYPE_CHECKING:
-                self.weight_variance = tp.cast(
-                    PositiveReal[WeightVariance], self.weight_variance
-                )
-
-        if isinstance(variance, nnx.Variable):
-            self.variance = variance
-        else:
-            self.variance = PositiveReal(variance)
-            if tp.TYPE_CHECKING:
-                self.variance = tp.cast(PositiveReal[ScalarArray], self.variance)
-
-        if isinstance(bias_variance, nnx.Variable):
-            self.bias_variance = bias_variance
-        else:
-            self.bias_variance = PositiveReal(bias_variance)
-            if tp.TYPE_CHECKING:
-                self.bias_variance = tp.cast(
-                    PositiveReal[ScalarArray], self.bias_variance
-                )
-
+        self.weight_variance = weight_variance
+        self.variance = variance
+        self.bias_variance = bias_variance
         self.name = f"ArcCosine (order {self.order})"
-
         super().__init__(active_dims, n_dims, compute_engine)
 
     def __call__(self, x: Float[Array, " D"], y: Float[Array, " D"]) -> ScalarArray:
@@ -149,12 +112,9 @@ class ArcCosine(AbstractKernel):
         Returns:
             Float[Array, "1"]: The value of the angular dependency function`.
         """
+        return jnp.select(
+            condlist=[self.order == 0,self.order == 1],
+            choicelist=[jnp.pi - theta,jnp.sin(theta) + (jnp.pi - theta) * jnp.cos(theta)],
+            default=3.0 * jnp.sin(theta) * jnp.cos(theta) + (jnp.pi - theta) * (1.0 + 2.0 * jnp.square(jnp.cos(theta)))
+        )
 
-        if self.order == 0:
-            return jnp.pi - theta
-        elif self.order == 1:
-            return jnp.sin(theta) + (jnp.pi - theta) * jnp.cos(theta)
-        else:
-            return 3.0 * jnp.sin(theta) * jnp.cos(theta) + (jnp.pi - theta) * (
-                1.0 + 2.0 * jnp.cos(theta) ** 2
-            )
