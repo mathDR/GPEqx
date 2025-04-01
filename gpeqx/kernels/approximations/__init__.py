@@ -1,3 +1,3 @@
-from gpjax.kernels.approximations.rff import RFF
+from gpepx.kernels.approximations.rff import RFF
 
 __all__ = ["RFF"]

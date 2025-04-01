@@ -14,7 +14,7 @@
 # ==============================================================================
 
 import beartype.typing as tp
-from flax import nnx
+import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import Float
 
@@ -61,12 +61,7 @@ class Linear(AbstractKernel):
 
         super().__init__(active_dims, n_dims, compute_engine)
 
-        if isinstance(variance, nnx.Variable):
-            self.variance = variance
-        else:
-            self.variance = PositiveReal(variance)
-            if tp.TYPE_CHECKING:
-                self.variance = tp.cast(PositiveReal[ScalarArray], self.variance)
+        self.variance = variance
 
     def __call__(
         self,

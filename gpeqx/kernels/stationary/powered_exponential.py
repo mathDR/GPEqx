@@ -1,31 +1,17 @@
-# Copyright 2022 The JaxGaussianProcesses Contributors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+# 
 
 import beartype.typing as tp
-from flax import nnx
 import jax.numpy as jnp
 from jaxtyping import Float
 
-from gpjax.kernels.computations import (
+from gpeqx.kernels.computations import (
     AbstractKernelComputation,
     DenseKernelComputation,
 )
-from gpjax.kernels.stationary.base import StationaryKernel
-from gpjax.kernels.stationary.utils import euclidean_distance
-from gpjax.parameters import SigmoidBounded
-from gpjax.typing import (
+from gpeqx.kernels.stationary.base import StationaryKernel
+from gpeqx.kernels.stationary.utils import euclidean_distance
+from gpeqx.parameters import SigmoidBounded
+from gpeqx.typing import (
     Array,
     ScalarArray,
     ScalarFloat,
@@ -55,9 +41,9 @@ class PoweredExponential(StationaryKernel):
     def __init__(
         self,
         active_dims: tp.Union[list[int], slice, None] = None,
-        lengthscale: tp.Union[LengthscaleCompatible, nnx.Variable[Lengthscale]] = 1.0,
-        variance: tp.Union[ScalarFloat, nnx.Variable[ScalarArray]] = 1.0,
-        power: tp.Union[ScalarFloat, nnx.Variable[ScalarArray]] = 1.0,
+        lengthscale: tp.Union[LengthscaleCompatible, Lengthscale] = 1.0,
+        variance: tp.Union[ScalarFloat, ScalarArray]]= 1.0,
+        power: tp.Union[ScalarFloat, ScalarArray]]= 1.0,
         n_dims: tp.Union[int, None] = None,
         compute_engine: AbstractKernelComputation = DenseKernelComputation(),
     ):
@@ -76,10 +62,7 @@ class PoweredExponential(StationaryKernel):
             compute_engine: the computation engine that the kernel uses to compute the
                 covariance matrix.
         """
-        if isinstance(power, nnx.Variable):
-            self.power = power
-        else:
-            self.power = SigmoidBounded(power)
+        self.power = power
 
         super().__init__(active_dims, lengthscale, variance, n_dims, compute_engine)
 

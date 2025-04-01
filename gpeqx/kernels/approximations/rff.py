@@ -4,11 +4,11 @@ import beartype.typing as tp
 import jax.random as jr
 from jaxtyping import Float
 
-from gpjax.kernels.base import AbstractKernel
-from gpjax.kernels.computations import BasisFunctionComputation
-from gpjax.kernels.stationary.base import StationaryKernel
-from gpjax.parameters import Static
-from gpjax.typing import (
+from gpepx.kernels.base import AbstractKernel
+from gpepx.kernels.computations import BasisFunctionComputation
+from gpepx.kernels.stationary.base import StationaryKernel
+from gpepx.parameters import Static
+from gpepx.typing import (
     Array,
     KeyArray,
 )
